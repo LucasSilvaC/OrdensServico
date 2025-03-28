@@ -21,6 +21,7 @@ Complete CRUD for registering ...
 <h3>pip install djangorestframework </h3>
 <h3>pip install django </h3>
 <h3>npm install react-router-dom </h3>
+<h3>npm i react-icons </h3>
 
 
 &nbsp;
