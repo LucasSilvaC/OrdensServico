@@ -27,4 +27,4 @@ Complete CRUD for registering ...
 &nbsp;
 
 ## 🖥 &nbsp;Repository
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=LucasSilvaC&repo=API-Escola&bg_color=0d1116&title_color=ce09ec&text_color=a4aacb&icon_color=007ec6)](https://github.com/LucasSilvaC/API-Escola) &nbsp;
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=LucasSilvaC&repo=OrdensServico&bg_color=0d1116&title_color=ce09ec&text_color=a4aacb&icon_color=007ec6)](https://github.com/LucasSilvaC/OrdensServico) &nbsp;
