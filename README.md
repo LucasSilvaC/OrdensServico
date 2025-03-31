@@ -22,9 +22,3 @@ Complete CRUD for registering ...
 <h3>pip install django </h3>
 <h3>npm install react-router-dom </h3>
 <h3>npm i react-icons </h3>
-
-
-&nbsp;
-
-## 🖥 &nbsp;Repository
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=LucasSilvaC&repo=OrdensServico&bg_color=0d1116&title_color=ce09ec&text_color=a4aacb&icon_color=007ec6)](https://github.com/LucasSilvaC/OrdensServico) &nbsp;
