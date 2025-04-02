@@ -16,9 +16,12 @@ Complete CRUD for registering ...
 &nbsp;
 
 ## 📖 &nbsp;Library
-<h3>pip install django-cors-headers </h3>
-<h3>pip install djangorestframework-simplejwt </h3>
-<h3>pip install djangorestframework </h3>
-<h3>pip install django </h3>
-<h3>npm install react-router-dom </h3>
-<h3>npm i react-icons </h3>
+<ul>
+<li>pip install django-cors-headers </li>
+<li>pip install djangorestframework-simplejwt </li>
+<li>pip install djangorestframework </li>
+<li>pip install django </li>
+<li>npm install react-router-dom </li>
+<li>npm i react-icons </li>
+<li>npm install lucide-react</li>
+</ul>
