@@ -24,4 +24,5 @@ Complete CRUD for registering item tickets for Senai Mange.
 <li>npm install react-router-dom </li>
 <li>npm i react-icons </li>
 <li>npm install lucide-react</li>
+<li>npm install axios</li>
 </ul>
