@@ -2,18 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import ModalAmbientes from "../modal/ambientes"; 
+import ModalResponsavel from "../modal/responsaveis";
 import { FaTrash, FaPlus } from "react-icons/fa";
 import { MdCreate } from "react-icons/md";
 import axios from "axios";
 
-export default function Ambientes() {
-    const name = "Ambientes";
+export default function Responsaveis() {
+    const name = "Responsáveis";
     const [dados, setDados] = useState([]);
     const [filtroNi, setFiltroNi] = useState("");
     const [filtroNome, setFiltroNome] = useState("");
     const [formVisivel, setFormVisivel] = useState(false);
-    const [ambienteSelecionado, setAmbienteSelecionado] = useState(null);
+    const [responsavelSelecionado, setResponsavelSelecionado] = useState(null);
     const [refresh, setRefresh] = useState(false);
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
@@ -29,37 +29,38 @@ export default function Ambientes() {
         if (!token) return;
         const fetchData = async () => {
             try {
-                const response = await axios.get("http://127.0.0.1:8000/api/ambientes", {
+                const response = await axios.get("http://127.0.0.1:8000/api/responsaveis", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setDados(response.data);
             } catch (error) {
-                console.error("Erro ao buscar ambientes:", error.response?.data || error.message);
+                console.error("Erro ao buscar responsáveis:", error.response?.data || error.message);
             }
         };
         fetchData();
     }, [token, refresh]);
 
     const apagar = async (id) => {
-        if (window.confirm("Deseja realmente apagar este ambiente?")) {
+        if (window.confirm("Deseja realmente apagar este responsável?")) {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/ambiente/${id}`, {
+                await axios.delete(`http://127.0.0.1:8000/api/responsavel/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setRefresh(!refresh);
             } catch (error) {
-                console.error("Erro ao apagar ambiente:", error.response?.data || error.message);
+                console.error("Erro ao apagar responsável:", error.response?.data || error.message);
             }
         }
     };
 
-    const criar = async (ambiente) => {
-        const niExiste = dados.some((item) => item.ni === ambiente.ni);
+    const criar = async (responsavel) => {
+        const niExiste = dados.some((item) => item.ni === responsavel.ni);
         if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
+            alert("Já existe um responsável com esse NI.");
+            return;
         }
         try {
-            await axios.post("http://127.0.0.1:8000/api/ambientes", ambiente, {
+            await axios.post("http://127.0.0.1:8000/api/responsaveis", responsavel, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -67,17 +68,13 @@ export default function Ambientes() {
             });
             setRefresh(!refresh);
         } catch (error) {
-            console.error("Erro ao criar ambiente:", error.response?.data || error.message);
+            console.error("Erro ao criar responsável:", error.response?.data || error.message);
         }
     };
 
-    const atualizar = async (ambiente) => {
-        const niExiste = dados.some((item) => item.ni === ambiente.ni);
-        if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
-        }
+    const atualizar = async (responsavel) => {
         try {
-            await axios.put(`http://127.0.0.1:8000/api/ambiente/${ambiente.id}`, ambiente, {
+            await axios.put(`http://127.0.0.1:8000/api/responsavel/${responsavel.id}`, responsavel, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -85,7 +82,7 @@ export default function Ambientes() {
             });
             setRefresh(!refresh);
         } catch (error) {
-            console.error("Erro ao atualizar ambiente:", error.response?.data || error.message);
+            console.error("Erro ao atualizar responsável:", error.response?.data || error.message);
         }
     };
 
@@ -100,22 +97,22 @@ export default function Ambientes() {
         <>
             <Header name={name} />
             <div className="container mx-auto p-4 mt-30 text-center">
-                <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Ambientes</h2>
+                <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Responsáveis</h2>
 
                 <div className="flex flex-col items-center">
                     <FaPlus
                         className="text-amber-50 cursor-pointer text-3xl mb-3"
                         onClick={() => {
                             setFormVisivel(true);
-                            setAmbienteSelecionado(null);
+                            setResponsavelSelecionado(null);
                         }}
                     />
                 </div>
 
-                <ModalAmbientes
+                <ModalResponsavel
                     isOpen={formVisivel}
                     onClose={() => setFormVisivel(false)}
-                    ambienteSelecionado={ambienteSelecionado}
+                    responsavelSelecionado={responsavelSelecionado}
                     criar={criar}
                     atualizar={atualizar}
                 />
@@ -154,7 +151,7 @@ export default function Ambientes() {
                                         className="cursor-pointer text-3xl hover:text-[#aaaaaa]"
                                         onClick={() => {
                                             setFormVisivel(true);
-                                            setAmbienteSelecionado(dado);
+                                            setResponsavelSelecionado(dado);
                                         }}
                                     />
                                 </td>

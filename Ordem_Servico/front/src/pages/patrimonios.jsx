@@ -6,6 +6,7 @@ import ModalPatrimonios from "../modal/patrimonios";
 import { FaTrash, FaPlus } from "react-icons/fa";
 import { MdCreate } from "react-icons/md";
 import axios from "axios";
+import { LuFileJson } from "react-icons/lu";
 
 export default function Patrimonios() {
     const name = "Patrimônios";
@@ -17,6 +18,7 @@ export default function Patrimonios() {
     const [refresh, setRefresh] = useState(false);
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
+    const [ambientes, setAmbientes] = useState([]);
 
     useEffect(() => {
         if (!token) {
@@ -40,6 +42,21 @@ export default function Patrimonios() {
         fetchData();
     }, [token, refresh]);
 
+    useEffect(() => {
+        const fetchAmbientes = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const response = await axios.get("http://127.0.0.1:8000/api/ambientes", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setAmbientes(response.data);
+            } catch (error) {
+                console.error("Erro ao buscar ambientes:", error.response?.data || error.message);
+            }
+        };
+        fetchAmbientes();
+    }, []);
+
     const apagar = async (id) => {
         if (window.confirm("Deseja realmente apagar?")) {
             try {
@@ -54,10 +71,15 @@ export default function Patrimonios() {
     };
 
     const criar = async (patrimonio) => {
+        const niExiste = dados.some((item) => item.ni === patrimonio.ni);
+        if (niExiste) {
+            alert("Já existe um patrimônio com esse NI.");
+        }
+
         const formData = new FormData();
         formData.append("ni", patrimonio.ni);
         formData.append("descricao", patrimonio.descricao);
-        formData.append("localizacao", patrimonio.localizacao);
+        formData.append("localizacao", patrimonio.localizacao?.id || patrimonio.localizacao);
         if (patrimonio.media) {
             formData.append("media", patrimonio.media);
         }
@@ -75,11 +97,58 @@ export default function Patrimonios() {
         }
     };
 
+    const handleImportarJson = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+
+                for (const item of jsonData) {
+                    if (!item.ni || !item.descricao || !item.localizacao) {
+                        console.warn("Item ignorado (faltando campos):", item);
+                        continue;
+                    }
+
+                    const ambiente = ambientes.find(
+                        (a) => a.nome.trim().toLowerCase() === item.localizacao.trim().toLowerCase()
+                    );
+
+                    const formData = new FormData();
+                    formData.append("ni", String(item.ni));
+                    formData.append("descricao", item.descricao);
+                    formData.append("localizacao", ambiente.id);
+
+                    await axios.post("http://127.0.0.1:8000/api/patrimonios", formData, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "multipart/form-data",
+                        },
+                    });
+                }
+
+                alert("Importação concluída!");
+                setRefresh((r) => !r);
+            } catch (error) {
+                console.error("Erro ao importar JSON:", error.response?.data || error);
+                alert("Erro ao importar. Tente novamente ou verifique os dados.");
+            }
+        };
+        reader.readAsText(file);
+    };
+
     const atualizar = async (patrimonio) => {
+        const niExiste = dados.some((item) => item.ni === patrimonio.ni);
+        if (niExiste) {
+            alert("Já existe um patrimônio com esse NI.");
+        }
+
         const formData = new FormData();
         formData.append("ni", patrimonio.ni);
         formData.append("descricao", patrimonio.descricao);
-        formData.append("localizacao", patrimonio.localizacao);
+        formData.append("localizacao", patrimonio.localizacao?.id || patrimonio.localizacao);
         if (patrimonio.media instanceof File) {
             formData.append("media", patrimonio.media);
         }
@@ -110,13 +179,25 @@ export default function Patrimonios() {
             <div className="container mx-auto p-4 mt-30 text-center">
                 <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Patrimônios</h2>
 
-                <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center gap-3 text-4xl text-amber-50">
                     <FaPlus
-                        className="text-amber-50 cursor-pointer text-3xl mb-3"
+                        className="cursor-pointer mb-8 mt-5  hover:text-[#aaaaaa]"
                         onClick={() => {
                             setFormVisivel(true);
                             setPatrimonioSelecionado(null);
                         }}
+                    />
+                    <input
+                        type="file"
+                        accept=".json"
+                        style={{ display: "none" }}
+                        id="import-json"
+                        onChange={handleImportarJson}
+                    />
+
+                    <LuFileJson
+                        className="cursor-pointer mb-8 mt-5 hover:text-amber-200"
+                        onClick={() => document.getElementById("import-json").click()}
                     />
                 </div>
 
@@ -126,6 +207,7 @@ export default function Patrimonios() {
                     patrimonioSelecionado={patrimonioSelecionado}
                     criar={criar}
                     atualizar={atualizar}
+                    ambientes={ambientes}
                 />
 
                 <div className="flex flex-col items-center gap-2 mb-4">
@@ -147,36 +229,45 @@ export default function Patrimonios() {
 
                 <table className="w-full mt-4 border-collapse border border-amber-50 text-amber-50">
                     <thead>
-                        <tr className="bg-transparent">
-                            <th className="border p-2">Ações</th>
-                            <th className="border p-2">NI</th>
-                            <th className="border p-2">Descrição</th>
-                            <th className="border p-2">Localização</th>
-                            <th className="border p-2">Mídia</th>
+                    <tr className="bg-zinc-800">
+                            <th className="border p-3">Ações</th>
+                            <th className="border p-3">NI</th>
+                            <th className="border p-3">Descrição</th>
+                            <th className="border p-3">Localização</th>
+                            <th className="border p-3">Mídia</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filtrarDados().map((dado) => (
-                            <tr key={dado.id} className="border">
-                                <td className="border p-2 flex gap-2 justify-center">
-                                    <FaTrash className="text-amber-50 cursor-pointer hover:text-[#aaaaaa]" onClick={() => apagar(dado.id)} />
-                                    <MdCreate
-                                        className="text-amber-50 cursor-pointer hover:text-[#aaaaaa]"
-                                        onClick={() => {
-                                            setFormVisivel(true);
-                                            setPatrimonioSelecionado(dado);
-                                        }}
-                                    />
+                            <tr key={dado.id} className="border text-base">
+                                <td className="border p-3">
+                                    <div className="flex gap-4 justify-center items-center text-3xl">
+                                        <FaTrash
+                                            className="cursor-pointer hover:text-[#aaaaaa] transition"
+                                            onClick={() => apagar(dado.id)}
+                                        />
+                                        <MdCreate
+                                            className="cursor-pointer hover:text-[#aaaaaa] transition"
+                                            onClick={() => {
+                                                setFormVisivel(true);
+                                                setPatrimonioSelecionado(dado);
+                                            }}
+                                        />
+                                    </div>
                                 </td>
-                                <td className="border p-2">{dado.ni}</td>
-                                <td className="border p-2">{dado.descricao}</td>
-                                <td className="border p-2">{dado.localizacao?.nome || "-"}</td>
-                                <td className="border p-2">
+                                <td className="border p-3">{dado.ni}</td>
+                                <td className="border p-3">{dado.descricao}</td>
+                                <td className="border p-3">
+                                    {dado.localizacao_obj && dado.localizacao_obj.nome
+                                        ? dado.localizacao_obj.nome
+                                        : `ID: ${dado.localizacao || "-"}`}
+                                </td>
+                                <td className="border p-3">
                                     {dado.media ? (
                                         <img
                                             src={`http://127.0.0.1:8000${dado.media}`}
                                             alt="Mídia do patrimônio"
-                                            className="w-20 h-20 object-cover mx-auto"
+                                            className="w-20 h-20 object-cover mx-auto rounded shadow"
                                         />
                                     ) : (
                                         "Sem imagem"

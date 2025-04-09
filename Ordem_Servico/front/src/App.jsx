@@ -5,6 +5,9 @@ import Home from './pages/home';
 import Login from './pages/login';
 import Patrimonios from './pages/patrimonios';
 import Ambientes from './pages/ambientes';
+import Manutentores from './pages/manutentores';
+import Gestores from './pages/gestores';
+import Responsaveis from './pages/responsaveis';
 
 export default function App() {
   return (
@@ -15,6 +18,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/patrimonios" element={<Patrimonios />} />
         <Route path="/ambientes" element={<Ambientes />} />
+        <Route path="/manutentores" element={<Manutentores />} />
+        <Route path="/gestores" element={<Gestores />} />
+        <Route path="/responsaveis" element={<Responsaveis />} />
       </Routes>
     </Router>
   );

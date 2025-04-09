@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 
-const ModalAmbientes = ({
+const ModalManutentores = ({
     isOpen = false,
     onClose = () => {},
-    ambienteSelecionado,
+    manutentorSelecionado,
     criar,
     atualizar,
 }) => {
@@ -14,23 +14,29 @@ const ModalAmbientes = ({
         id: "",
         ni: "",
         nome: "",
+        area: "",
+        gestor: "", // supondo que você vai passar o ID do gestor
     });
 
     useEffect(() => {
-        if (ambienteSelecionado) {
+        if (manutentorSelecionado) {
             setFormData({
-                id: ambienteSelecionado.id || "",
-                ni: ambienteSelecionado.ni || "",
-                nome: ambienteSelecionado.nome || "",
+                id: manutentorSelecionado.id || "",
+                ni: manutentorSelecionado.ni || "",
+                nome: manutentorSelecionado.nome || "",
+                area: manutentorSelecionado.area || "",
+                gestor: manutentorSelecionado.gestor || "",
             });
         } else {
             setFormData({
                 id: "",
                 ni: "",
                 nome: "",
+                area: "",
+                gestor: "",
             });
         }
-    }, [ambienteSelecionado]);
+    }, [manutentorSelecionado]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -42,8 +48,8 @@ const ModalAmbientes = ({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (ambienteSelecionado) {
-            atualizar({ ...ambienteSelecionado, ...formData });
+        if (manutentorSelecionado) {
+            atualizar({ ...manutentorSelecionado, ...formData });
         } else {
             criar(formData);
         }
@@ -55,6 +61,8 @@ const ModalAmbientes = ({
             id: "",
             ni: "",
             nome: "",
+            area: "",
+            gestor: "",
         });
         onClose();
     };
@@ -66,7 +74,7 @@ const ModalAmbientes = ({
                     <FaTimes />
                 </button>
                 <h2 className="text-3xl font-bold mb-4 text-amber-50">
-                    {ambienteSelecionado ? "Editar Ambiente" : "Cadastrar Ambiente"}
+                    {manutentorSelecionado ? "Editar Manutentor" : "Cadastrar Manutentor"}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-amber-50">
@@ -83,8 +91,28 @@ const ModalAmbientes = ({
                     <input
                         type="text"
                         name="nome"
-                        placeholder="Nome do Ambiente"
+                        placeholder="Nome do Manutentor"
                         value={formData.nome}
+                        onChange={handleChange}
+                        className="border border-amber-100 p-2 rounded bg-transparent"
+                        required
+                    />
+
+                    <input
+                        type="text"
+                        name="area"
+                        placeholder="Área"
+                        value={formData.area}
+                        onChange={handleChange}
+                        className="border border-amber-100 p-2 rounded bg-transparent"
+                        required
+                    />
+
+                    <input
+                        type="text"
+                        name="gestor"
+                        placeholder="ID do Gestor"
+                        value={formData.gestor}
                         onChange={handleChange}
                         className="border border-amber-100 p-2 rounded bg-transparent"
                         required
@@ -102,4 +130,4 @@ const ModalAmbientes = ({
     );
 };
 
-export default ModalAmbientes;
+export default ModalManutentores;

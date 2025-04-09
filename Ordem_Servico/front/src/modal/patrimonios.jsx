@@ -7,7 +7,7 @@ const ModalPatrimonios = ({
     patrimonioSelecionado,
     criar,
     atualizar,
-    ambientes = [], 
+    ambientes = [],
 }) => {
     if (!isOpen) return null;
 
@@ -127,12 +127,12 @@ const ModalPatrimonios = ({
                         name="localizacao"
                         value={formData.localizacao}
                         onChange={handleChange}
-                        className="border p-2 rounded text-amber-50"
+                        className="border p-2 rounded border-amber-50"
                         required
                     >
-                        <option value="">Selecione o ambiente</option>
+                        <option value="" className="text-[#242424]">Selecione o ambiente</option>
                         {ambientes.map((amb) => (
-                            <option key={amb.id} value={amb.id}>
+                            <option key={amb.id} value={amb.id} className="text-[#242424]">
                                 {amb.nome}
                             </option>
                         ))}
@@ -153,7 +153,7 @@ const ModalPatrimonios = ({
                 <div className="mt-4">
                     <h3 className="text-lg font-semibold text-amber-50">Pré-visualização:</h3>
                     <div className="flex justify-center mt-2">
-                        <img src={imagePreview} alt="Foto do Patrimônio" className="w-32 h-32 object-cover border rounded text-amber-50" />
+                        <img src={imagePreview} alt="Foto do Patrimônio" className="w-70 h-70 object-cover border rounded text-amber-50" />
                     </div>
                 </div>
             </div>

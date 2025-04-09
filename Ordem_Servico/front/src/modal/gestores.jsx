@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 
-const ModalAmbientes = ({
+const ModalGestores = ({
     isOpen = false,
     onClose = () => {},
-    ambienteSelecionado,
+    gestorSelecionado,
     criar,
     atualizar,
 }) => {
@@ -14,23 +14,29 @@ const ModalAmbientes = ({
         id: "",
         ni: "",
         nome: "",
+        area: "",
+        cargo: "",
     });
 
     useEffect(() => {
-        if (ambienteSelecionado) {
+        if (gestorSelecionado) {
             setFormData({
-                id: ambienteSelecionado.id || "",
-                ni: ambienteSelecionado.ni || "",
-                nome: ambienteSelecionado.nome || "",
+                id: gestorSelecionado.id || "",
+                ni: gestorSelecionado.ni || "",
+                nome: gestorSelecionado.nome || "",
+                area: gestorSelecionado.area || "",
+                cargo: gestorSelecionado.cargo || "",
             });
         } else {
             setFormData({
                 id: "",
                 ni: "",
                 nome: "",
+                area: "",
+                cargo: "",
             });
         }
-    }, [ambienteSelecionado]);
+    }, [gestorSelecionado]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -42,8 +48,8 @@ const ModalAmbientes = ({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (ambienteSelecionado) {
-            atualizar({ ...ambienteSelecionado, ...formData });
+        if (gestorSelecionado) {
+            atualizar({ ...gestorSelecionado, ...formData });
         } else {
             criar(formData);
         }
@@ -55,9 +61,18 @@ const ModalAmbientes = ({
             id: "",
             ni: "",
             nome: "",
+            area: "",
+            cargo: "",
         });
         onClose();
     };
+
+    const opcoesCargo = [
+        "Diretor",
+        "Coordenador Pedagógico",
+        "Coordenador Técnico",
+        "Orientador de práticas profissionais",
+    ];
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-[#242424] bg-opacity-80 z-50">
@@ -66,7 +81,7 @@ const ModalAmbientes = ({
                     <FaTimes />
                 </button>
                 <h2 className="text-3xl font-bold mb-4 text-amber-50">
-                    {ambienteSelecionado ? "Editar Ambiente" : "Cadastrar Ambiente"}
+                    {gestorSelecionado ? "Editar Gestor" : "Cadastrar Gestor"}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-amber-50">
@@ -83,12 +98,37 @@ const ModalAmbientes = ({
                     <input
                         type="text"
                         name="nome"
-                        placeholder="Nome do Ambiente"
+                        placeholder="Nome do Gestor"
                         value={formData.nome}
                         onChange={handleChange}
                         className="border border-amber-100 p-2 rounded bg-transparent"
                         required
                     />
+
+                    <input
+                        type="text"
+                        name="area"
+                        placeholder="Área"
+                        value={formData.area}
+                        onChange={handleChange}
+                        className="border border-amber-100 p-2 rounded bg-transparent"
+                        required
+                    />
+
+                    <select
+                        name="cargo"
+                        value={formData.cargo}
+                        onChange={handleChange}
+                        className="border border-amber-100 p-2 rounded bg-transparent"
+                        required
+                    >
+                        <option value="" className="text-[#242424]">Selecione o cargo</option>
+                        {opcoesCargo.map((cargo) => (
+                            <option key={cargo} value={cargo} className="text-[#242424]">
+                                {cargo}
+                            </option>
+                        ))}
+                    </select>
 
                     <button
                         type="submit"
@@ -102,4 +142,4 @@ const ModalAmbientes = ({
     );
 };
 
-export default ModalAmbientes;
+export default ModalGestores;

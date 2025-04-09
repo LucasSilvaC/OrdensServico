@@ -2,18 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import ModalAmbientes from "../modal/ambientes"; 
+import ModalManutentor from "../modal/manutentores"; 
 import { FaTrash, FaPlus } from "react-icons/fa";
 import { MdCreate } from "react-icons/md";
 import axios from "axios";
 
-export default function Ambientes() {
-    const name = "Ambientes";
+export default function Manutentores() {
+    const name = "Manutentores";
     const [dados, setDados] = useState([]);
     const [filtroNi, setFiltroNi] = useState("");
     const [filtroNome, setFiltroNome] = useState("");
     const [formVisivel, setFormVisivel] = useState(false);
-    const [ambienteSelecionado, setAmbienteSelecionado] = useState(null);
+    const [manutentorSelecionado, setManutentorSelecionado] = useState(null);
     const [refresh, setRefresh] = useState(false);
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
@@ -29,37 +29,38 @@ export default function Ambientes() {
         if (!token) return;
         const fetchData = async () => {
             try {
-                const response = await axios.get("http://127.0.0.1:8000/api/ambientes", {
+                const response = await axios.get("http://127.0.0.1:8000/api/manutentores", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setDados(response.data);
             } catch (error) {
-                console.error("Erro ao buscar ambientes:", error.response?.data || error.message);
+                console.error("Erro ao buscar manutentores:", error.response?.data || error.message);
             }
         };
         fetchData();
     }, [token, refresh]);
 
     const apagar = async (id) => {
-        if (window.confirm("Deseja realmente apagar este ambiente?")) {
+        if (window.confirm("Deseja realmente apagar este manutentor?")) {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/ambiente/${id}`, {
+                await axios.delete(`http://127.0.0.1:8000/api/manutentor/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setRefresh(!refresh);
             } catch (error) {
-                console.error("Erro ao apagar ambiente:", error.response?.data || error.message);
+                console.error("Erro ao apagar manutentor:", error.response?.data || error.message);
             }
         }
     };
 
-    const criar = async (ambiente) => {
-        const niExiste = dados.some((item) => item.ni === ambiente.ni);
+    const criar = async (manutentor) => {
+        const niExiste = dados.some((item) => item.ni === manutentor.ni);
         if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
+            alert("Já existe um manutentor com esse NI.");
+            return;
         }
         try {
-            await axios.post("http://127.0.0.1:8000/api/ambientes", ambiente, {
+            await axios.post("http://127.0.0.1:8000/api/manutentores", manutentor, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -67,17 +68,13 @@ export default function Ambientes() {
             });
             setRefresh(!refresh);
         } catch (error) {
-            console.error("Erro ao criar ambiente:", error.response?.data || error.message);
+            console.error("Erro ao criar manutentor:", error.response?.data || error.message);
         }
     };
 
-    const atualizar = async (ambiente) => {
-        const niExiste = dados.some((item) => item.ni === ambiente.ni);
-        if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
-        }
+    const atualizar = async (manutentor) => {
         try {
-            await axios.put(`http://127.0.0.1:8000/api/ambiente/${ambiente.id}`, ambiente, {
+            await axios.put(`http://127.0.0.1:8000/api/manutentor/${manutentor.id}`, manutentor, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -85,7 +82,7 @@ export default function Ambientes() {
             });
             setRefresh(!refresh);
         } catch (error) {
-            console.error("Erro ao atualizar ambiente:", error.response?.data || error.message);
+            console.error("Erro ao atualizar manutentor:", error.response?.data || error.message);
         }
     };
 
@@ -100,22 +97,22 @@ export default function Ambientes() {
         <>
             <Header name={name} />
             <div className="container mx-auto p-4 mt-30 text-center">
-                <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Ambientes</h2>
+                <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Manutentores</h2>
 
                 <div className="flex flex-col items-center">
                     <FaPlus
                         className="text-amber-50 cursor-pointer text-3xl mb-3"
                         onClick={() => {
                             setFormVisivel(true);
-                            setAmbienteSelecionado(null);
+                            setManutentorSelecionado(null);
                         }}
                     />
                 </div>
 
-                <ModalAmbientes
+                <ModalManutentor
                     isOpen={formVisivel}
                     onClose={() => setFormVisivel(false)}
-                    ambienteSelecionado={ambienteSelecionado}
+                    manutentorSelecionado={manutentorSelecionado}
                     criar={criar}
                     atualizar={atualizar}
                 />
@@ -143,6 +140,8 @@ export default function Ambientes() {
                             <th className="border p-2">Ações</th>
                             <th className="border p-2">NI</th>
                             <th className="border p-2">Nome</th>
+                            <th className="border p-2">Área</th>
+                            <th className="border p-2">Gestor</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -154,12 +153,14 @@ export default function Ambientes() {
                                         className="cursor-pointer text-3xl hover:text-[#aaaaaa]"
                                         onClick={() => {
                                             setFormVisivel(true);
-                                            setAmbienteSelecionado(dado);
+                                            setManutentorSelecionado(dado);
                                         }}
                                     />
                                 </td>
                                 <td className="border p-2">{dado.ni}</td>
                                 <td className="border p-2">{dado.nome}</td>
+                                <td className="border p-2">{dado.area}</td>
+                                <td className="border p-2">{dado.gestor?.nome || dado.gestor}</td>
                             </tr>
                         ))}
                     </tbody>

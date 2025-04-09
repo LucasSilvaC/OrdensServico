@@ -7,15 +7,18 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
         model = OrdemServico
         fields = '__all__'
 
-class PatrimonioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Patrimonio
-        fields = '__all__'
-
 class AmbienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ambiente
         fields = '__all__'
+        
+class PatrimonioSerializer(serializers.ModelSerializer):
+    localizacao_obj = AmbienteSerializer(source='localizacao', read_only=True)
+    localizacao = serializers.PrimaryKeyRelatedField(queryset=Ambiente.objects.all())
+
+    class Meta:
+        model = Patrimonio
+        fields = ['id', 'ni', 'descricao', 'localizacao', 'media', 'localizacao_obj']
 
 class ManutentoresSerializer(serializers.ModelSerializer):
     class Meta:

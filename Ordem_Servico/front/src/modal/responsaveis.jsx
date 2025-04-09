@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 
-const ModalAmbientes = ({
+const ModalResponsavel = ({
     isOpen = false,
     onClose = () => {},
-    ambienteSelecionado,
+    responsavelSelecionado,
     criar,
     atualizar,
 }) => {
@@ -17,11 +17,11 @@ const ModalAmbientes = ({
     });
 
     useEffect(() => {
-        if (ambienteSelecionado) {
+        if (responsavelSelecionado) {
             setFormData({
-                id: ambienteSelecionado.id || "",
-                ni: ambienteSelecionado.ni || "",
-                nome: ambienteSelecionado.nome || "",
+                id: responsavelSelecionado.id || "",
+                ni: responsavelSelecionado.ni || "",
+                nome: responsavelSelecionado.nome || "",
             });
         } else {
             setFormData({
@@ -30,7 +30,7 @@ const ModalAmbientes = ({
                 nome: "",
             });
         }
-    }, [ambienteSelecionado]);
+    }, [responsavelSelecionado]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -42,8 +42,8 @@ const ModalAmbientes = ({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (ambienteSelecionado) {
-            atualizar({ ...ambienteSelecionado, ...formData });
+        if (responsavelSelecionado) {
+            atualizar({ ...responsavelSelecionado, ...formData });
         } else {
             criar(formData);
         }
@@ -66,7 +66,7 @@ const ModalAmbientes = ({
                     <FaTimes />
                 </button>
                 <h2 className="text-3xl font-bold mb-4 text-amber-50">
-                    {ambienteSelecionado ? "Editar Ambiente" : "Cadastrar Ambiente"}
+                    {responsavelSelecionado ? "Editar Responsável" : "Cadastrar Responsável"}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-amber-50">
@@ -83,7 +83,7 @@ const ModalAmbientes = ({
                     <input
                         type="text"
                         name="nome"
-                        placeholder="Nome do Ambiente"
+                        placeholder="Nome do Responsável"
                         value={formData.nome}
                         onChange={handleChange}
                         className="border border-amber-100 p-2 rounded bg-transparent"
@@ -102,4 +102,4 @@ const ModalAmbientes = ({
     );
 };
 
-export default ModalAmbientes;
+export default ModalResponsavel;
