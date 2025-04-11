@@ -1,0 +1,65 @@
+#https://chatgpt.com/share/67f7fb61-42a0-8006-badd-d5cc69ccf7bd
+
+################################# Testar 3 tipos de usuários #################################################
+
+# Tipo de usuário	                                                is_superuser	is_staff
+# Superusuário	                                                    True	        True
+# Funcionário com acesso ao admin (mas sem todas permissões)	    False	        True
+# Usuário comum	                                                    False	        False
+
+#   1. Superusuário (is_superuser=True, is_staff=True)
+#     🔒 Permissões:
+#     Acesso total ao painel admin
+#     Pode ver, editar, excluir e criar qualquer objeto de qualquer app
+#     Ignora todas as regras de permissões (tem acesso irrestrito)
+#     Pode criar outros usuários, grupos, permissões, etc.    
+#     📌 Ideal para: Desenvolvedores ou administradores do sistema
+
+#   2. Funcionário com acesso ao admin (is_superuser=False, is_staff=True)
+#       🔒 Permissões:
+#       Pode acessar o painel admin do Django
+#       Só pode ver/editar o que tiver permissão atribuída (diretamente ou via grupo)
+#       Pode ser limitado a apenas ver certos modelos, ou editar apenas alguns campos
+#       📌 Ideal para: Colaboradores, moderadores, secretários, professores, etc.
+
+#   3. Usuário comum (is_superuser=False, is_staff=False)
+#       🔒 Permissões:
+#       Não pode acessar o painel admin
+#       Pode usar apenas as funcionalidades da aplicação (site ou API) que você permitir
+#       Normalmente usado para login em áreas públicas ou privadas do seu sistema, como clientes ou alunos
+#       📌 Ideal para: Usuários finais, como alunos, clientes, etc.
+
+#   Dica prática:
+#       Se quiser restringir certas views, você pode usar esses campos assim:
+
+#       if request.user.is_staff:
+#           # Mostrar opções administrativas
+
+# ou no decorator:
+#   from django.contrib.admin.views.decorators import staff_member_required
+
+#   @staff_member_required
+#   def view_admin(request):
+#     ...
+
+class CriarUsuarioAPIView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({'erro': 'Usuário e senha obrigatórios'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username=username).exists():
+            return Response({'erro': 'Usuário já existe'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            is_staff=False,
+            is_superuser=False
+        )
+
+        return Response({'mensagem': 'Usuário criado com sucesso!'}, status=status.HTTP_201_CREATED)
