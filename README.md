@@ -26,4 +26,5 @@ Complete CRUD for registering item tickets for Senai Mange.
 <li>npm install lucide-react</li>
 <li>npm install axios</li>
 <li>npm install react-loading-icons</li>
+<li>npm install xlsx</li>
 </ul>
