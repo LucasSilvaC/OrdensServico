@@ -97,11 +97,11 @@ export default function Responsaveis() {
         <>
             <Header name={name} />
             <div className="container mx-auto p-4 mt-30 text-center">
-                <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Responsáveis</h2>
+                <h2 className="text-5xl font-bold mb-4 text-white">Lista de Responsáveis</h2>
 
                 <div className="flex flex-col items-center">
                     <FaPlus
-                        className="text-amber-50 cursor-pointer text-3xl mb-3"
+                        className="text-white cursor-pointer text-3xl mb-3"
                         onClick={() => {
                             setFormVisivel(true);
                             setResponsavelSelecionado(null);
@@ -123,18 +123,18 @@ export default function Responsaveis() {
                         placeholder="Buscar pelo NI..."
                         value={filtroNi}
                         onChange={(e) => setFiltroNi(e.target.value)}
-                        className="border rounded px-2 py-1 w-80 text-amber-50"
+                        className="border rounded px-2 py-1 w-80 text-white"
                     />
                     <input
                         type="text"
                         placeholder="Buscar por nome..."
                         value={filtroNome}
                         onChange={(e) => setFiltroNome(e.target.value)}
-                        className="border rounded px-2 py-1 w-80 text-amber-50"
+                        className="border rounded px-2 py-1 w-80 text-white"
                     />
                 </div>
 
-                <table className="w-full mt-4 border-collapse text-amber-50">
+                <table className="w-full mt-4 border-collapse text-white">
                     <thead>
                         <tr className="bg-transparent">
                             <th className="border p-2">Ações</th>

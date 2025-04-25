@@ -27,8 +27,8 @@ const ModalPatrimonios = ({
                 id: patrimonioSelecionado.id || "",
                 ni: patrimonioSelecionado.ni || "",
                 descricao: patrimonioSelecionado.descricao || "",
-                localizacao: patrimonioSelecionado.localizacao || "",
-                media: null, // só atualiza com nova imagem
+                localizacao: patrimonioSelecionado.localizacao?.id || "",
+                media: null,
             });
 
             if (patrimonioSelecionado.media) {
@@ -37,14 +37,7 @@ const ModalPatrimonios = ({
                 setImagePreview("../media/teste.png");
             }
         } else {
-            setFormData({
-                id: "",
-                ni: "",
-                descricao: "",
-                localizacao: "",
-                media: null,
-            });
-            setImagePreview("../media/teste.png");
+            resetForm();
         }
     }, [patrimonioSelecionado]);
 
@@ -57,9 +50,7 @@ const ModalPatrimonios = ({
                     ...prev,
                     media: file,
                 }));
-
-                const objectUrl = URL.createObjectURL(file);
-                setImagePreview(objectUrl);
+                setImagePreview(URL.createObjectURL(file));
             }
         } else {
             setFormData((prev) => ({
@@ -80,7 +71,7 @@ const ModalPatrimonios = ({
         handleClose();
     };
 
-    const handleClose = () => {
+    const resetForm = () => {
         setFormData({
             id: "",
             ni: "",
@@ -89,27 +80,35 @@ const ModalPatrimonios = ({
             media: null,
         });
         setImagePreview("../media/teste.png");
+    };
+
+    const handleClose = () => {
+        resetForm();
         onClose();
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-[#242424]">
-            <div className="bg-transparent p-4 rounded-lg shadow-lg w-120 text-center relative">
-                <button className="absolute top-2 right-2 text-amber-50 cursor-pointer" onClick={handleClose}>
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center overflow-y-auto pt-40">
+            <div className="bg-gray-900 p-6 rounded-2xl shadow-xl w-full max-w-2xl mx-4 relative h-150">
+                <button
+                    className="absolute top-4 right-4 text-white hover:text-red-400 text-xl"
+                    onClick={handleClose}
+                >
                     <FaTimes />
                 </button>
-                <h2 className="text-4xl font-bold mb-4 text-amber-50">
+
+                <h2 className="text-3xl font-bold mb-6 text-white text-center">
                     {patrimonioSelecionado ? "Editar Patrimônio" : "Cadastrar Patrimônio"}
                 </h2>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-2 text-amber-50">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <input
                         type="text"
                         name="ni"
                         placeholder="NI"
                         value={formData.ni}
                         onChange={handleChange}
-                        className="border p-2 rounded text-amber-50"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none"
                         required
                     />
 
@@ -119,7 +118,7 @@ const ModalPatrimonios = ({
                         placeholder="Descrição"
                         value={formData.descricao}
                         onChange={handleChange}
-                        className="border p-2 rounded text-amber-50"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none"
                         required
                     />
 
@@ -127,13 +126,13 @@ const ModalPatrimonios = ({
                         name="localizacao"
                         value={formData.localizacao}
                         onChange={handleChange}
-                        className="border p-2 rounded border-amber-50"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none"
                         required
                     >
-                        <option value="" className="text-[#242424]">Selecione o ambiente</option>
+                        <option value="">Selecione o ambiente</option>
                         {ambientes.map((amb) => (
-                            <option key={amb.id} value={amb.id} className="text-[#242424]">
-                                {amb.nome}
+                            <option key={amb.id} value={amb.id} className="text-black">
+                                {amb.descricao}
                             </option>
                         ))}
                     </select>
@@ -142,18 +141,25 @@ const ModalPatrimonios = ({
                         type="file"
                         name="media"
                         onChange={handleChange}
-                        className="border p-2 rounded text-amber-50"
+                        className="text-white"
                     />
 
-                    <button type="submit" className="bg-purple-500 text-amber-50 p-2 rounded hover:bg-purple-700 cursor-pointer text-2xl">
+                    <button
+                        type="submit"
+                        className="bg-purple-600 hover:bg-purple-800 transition text-white py-2 rounded text-xl font-semibold cursor-pointer"
+                    >
                         Salvar
                     </button>
                 </form>
 
-                <div className="mt-4">
-                    <h3 className="text-lg font-semibold text-amber-50">Pré-visualização:</h3>
-                    <div className="flex justify-center mt-2">
-                        <img src={imagePreview} alt="Foto do Patrimônio" className="w-70 h-70 object-cover border rounded text-amber-50" />
+                <div className="mt-6">
+                    <h3 className="text-lg text-white mb-2 text-center">Pré-visualização:</h3>
+                    <div className="flex justify-center">
+                        <img
+                            src={imagePreview}
+                            alt="Imagem do Patrimônio"
+                            className="w-40 h-40 object-cover border border-purple-400 rounded"
+                        />
                     </div>
                 </div>
             </div>

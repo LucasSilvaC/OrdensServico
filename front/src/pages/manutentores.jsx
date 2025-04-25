@@ -18,9 +18,11 @@ export default function Manutentores() {
     const [manutentorSelecionado, setManutentorSelecionado] = useState(null);
     const [refresh, setRefresh] = useState(false);
     const [tabelaVisivel, setTabelaVisivel] = useState(true);
+    const [areas, setAreas] = useState([]);
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const user = localStorage.getItem("user");
+    const [gestores, setGestores] = useState([]);
 
     useEffect(() => {
         if (!user) {
@@ -43,6 +45,40 @@ export default function Manutentores() {
         fetchData();
     }, [token, refresh]);
 
+    useEffect(() => {
+        const fetchAreas = async () => {
+            try {
+                const res = await axios.get("http://127.0.0.1:8000/api/areas/", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setAreas(res.data);
+            } catch (error) {
+                console.error("Erro ao buscar áreas:", error.response?.data || error.message);
+            }
+        };
+
+        if (token) {
+            fetchAreas();
+        }
+    }, [token]);
+
+    useEffect(() => {
+        const fetchGestores = async () => {
+            try {
+                const res = await axios.get("http://127.0.0.1:8000/api/gestores/", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setGestores(res.data);
+            } catch (error) {
+                console.error("Erro ao buscar gestores:", error.response?.data || error.message);
+            }
+        };
+
+        if (token) {
+            fetchGestores();
+        }
+    }, [token]);
+
     const apagar = async (id) => {
         if (window.confirm("Deseja realmente apagar este manutentor?")) {
             try {
@@ -63,7 +99,14 @@ export default function Manutentores() {
             return;
         }
         try {
-            await axios.post("http://127.0.0.1:8000/api/manutentores/", manutentor, {
+            const payload = {
+                sn: manutentor.sn,
+                nome: manutentor.nome,
+                email: manutentor.email,
+                area: manutentor.area,
+                gestor: manutentor.gestor,
+            };
+            await axios.post("http://127.0.0.1:8000/api/manutentores/", payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -96,6 +139,16 @@ export default function Manutentores() {
         );
     };
 
+    const dadosCompletos = filtrarDados().map((dado) => {
+        const areaObj = areas.find((a) => a.id === dado.area);
+        const gestorObj = gestores.find((g) => g.id === dado.gestor);
+        return {
+            ...dado,
+            areaNome: areaObj ? areaObj.nome : "",
+            gestorNome: gestorObj ? gestorObj.nome : "",
+        };
+    });
+
     const handleImportarXlsx = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -108,8 +161,11 @@ export default function Manutentores() {
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
             for (const item of jsonData) {
-                if (!item.sn || !item.nome || !item.email || !item.area || !item.gestor) {
-                    console.warn("Item ignorado (faltando campos):", item);
+                const areaCorrespondente = areas.find((a) => a.nome === item.area);
+                const gestorCorrespondente = gestores.find((g) => g.nome === item.gestor);
+
+                if (!areaCorrespondente || !gestorCorrespondente) {
+                    console.warn("Área ou Gestor não encontrados para:", item);
                     continue;
                 }
 
@@ -117,8 +173,8 @@ export default function Manutentores() {
                     sn: String(item.sn),
                     nome: item.nome,
                     email: item.email,
-                    area: { nome: item.area },
-                    gestor: { nome: item.gestor },
+                    area: areaCorrespondente.id,
+                    gestor: gestorCorrespondente.id,
                 };
 
                 try {
@@ -144,14 +200,14 @@ export default function Manutentores() {
     return (
         <>
             <Header name={name} />
-            <div className="container mx-auto p-6 mt-20 text-center text-amber-50">
-                <h2 className="text-5xl font-bold mb-8 text-amber-50 drop-shadow">
+            <div className="container mx-auto p-6 mt-20 text-center text-white">
+                <h2 className="text-5xl font-bold mb-8 text-white drop-shadow">
                     Lista de Manutentores
                 </h2>
 
                 <div className="flex items-center mb-6 justify-center gap-6">
                     <FaPlus
-                        className="text-amber-50 hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
+                        className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
                         onClick={() => {
                             setFormVisivel(true);
                             setManutentorSelecionado(null);
@@ -159,7 +215,7 @@ export default function Manutentores() {
                     />
                     <label htmlFor="xlsxUpload">
                         <BsFiletypeXlsx
-                            className="text-amber-50 hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
+                            className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
                         />
                     </label>
                     <input
@@ -177,6 +233,8 @@ export default function Manutentores() {
                     manutentorSelecionado={manutentorSelecionado}
                     criar={criar}
                     atualizar={atualizar}
+                    areas={areas}
+                    gestores={gestores}
                 />
 
                 <div className="flex flex-col md:flex-row justify-center gap-4 mb-6">
@@ -185,14 +243,14 @@ export default function Manutentores() {
                         placeholder="Buscar pelo SN..."
                         value={filtroSn}
                         onChange={(e) => setFiltroSn(e.target.value)}
-                        className="px-4 py-2 rounded bg-gray-800 text-amber-50 border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
                     />
                     <input
                         type="text"
                         placeholder="Buscar por nome..."
                         value={filtroNome}
                         onChange={(e) => setFiltroNome(e.target.value)}
-                        className="px-4 py-2 rounded bg-gray-800 text-amber-50 border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
                     />
                 </div>
 
@@ -205,7 +263,7 @@ export default function Manutentores() {
 
                 {tabelaVisivel && (
                     <div className="overflow-x-auto transition-all duration-500 ease-in-out border border-purple-400 rounded-xl">
-                        <table className="w-full rounded-xl overflow-hidden text-amber-100 bg-gray-800 cursor-pointer">
+                        <table className="w-full rounded-xl overflow-hidden text-white bg-gray-800 cursor-pointer">
                             <thead>
                                 <tr className="bg-gray-800 text-purple-100 border-b border-purple-400 text-xl">
                                     <th className="p-4 border-r border-purple-400">Ações</th>
@@ -217,18 +275,15 @@ export default function Manutentores() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filtrarDados().map((dado) => (
-                                    <tr
-                                        key={dado.id}
-                                        className="hover:bg-gray-900 transition-all duration-300"
-                                    >
+                                {dadosCompletos.map((dado) => (
+                                    <tr key={dado.id} className="hover:bg-gray-900 transition-all duration-300">
                                         <td className="p-3 flex justify-center gap-4 border-t border-purple-400 border-r">
                                             <FaTrash
-                                                className="text-amber-50 hover:text-purple-400 cursor-pointer text-xl"
+                                                className="text-white hover:text-purple-400 cursor-pointer text-xl"
                                                 onClick={() => apagar(dado.id)}
                                             />
                                             <MdCreate
-                                                className="text-amber-50 hover:text-purple-400 cursor-pointer text-xl"
+                                                className="text-white hover:text-purple-400 cursor-pointer text-xl"
                                                 onClick={() => {
                                                     setFormVisivel(true);
                                                     setManutentorSelecionado(dado);
@@ -238,8 +293,8 @@ export default function Manutentores() {
                                         <td className="p-3 border-t border-purple-400 border-r">{dado.sn}</td>
                                         <td className="p-3 border-t border-purple-400 border-r">{dado.nome}</td>
                                         <td className="p-3 border-t border-purple-400 border-r">{dado.email}</td>
-                                        <td className="p-3 border-t border-purple-400 border-r">{dado.area.nome}</td>
-                                        <td className="p-3 border-t border-purple-400">{dado.gestor.nome}</td>
+                                        <td className="p-3 border-t border-purple-400 border-r">{dado.areaNome}</td>
+                                        <td className="p-3 border-t border-purple-400">{dado.gestorNome}</td>
                                     </tr>
                                 ))}
                             </tbody>

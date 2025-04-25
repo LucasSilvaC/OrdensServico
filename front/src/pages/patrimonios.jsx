@@ -1,3 +1,4 @@
+import { LuFileJson } from "react-icons/lu";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
@@ -5,87 +6,70 @@ import Footer from "../components/footer";
 import ModalPatrimonios from "../modal/patrimonios";
 import { FaTrash, FaPlus } from "react-icons/fa";
 import { MdCreate } from "react-icons/md";
+import { BsFiletypeXlsx } from "react-icons/bs";
 import axios from "axios";
-import { LuFileJson } from "react-icons/lu";
+import * as XLSX from "xlsx";
 
 export default function Patrimonios() {
     const name = "Patrimônios";
-    const [dados, setDados] = useState([]);
+    const [patrimonios, setPatrimonios] = useState([]);
+    const [ambientes, setAmbientes] = useState([]);
+    const [refresh, setRefresh] = useState(false);
     const [filtroNi, setFiltroNi] = useState("");
     const [filtroDescricao, setFiltroDescricao] = useState("");
-    const [formVisivel, setFormVisivel] = useState(false);
     const [patrimonioSelecionado, setPatrimonioSelecionado] = useState(null);
-    const [refresh, setRefresh] = useState(false);
-    const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [filtrados, setFiltrados] = useState([]);
+
     const token = localStorage.getItem("token");
-    const [ambientes, setAmbientes] = useState([]);
+    const user = localStorage.getItem("user");
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (!token) {
-            alert("Faça login para acessar essa página");
-            navigate("/login");
-        }
-    }, [token, navigate]);
+        if (!user) navigate("/error");
+    }, [user]);
 
     useEffect(() => {
-        if (!token) return;
         const fetchData = async () => {
             try {
-                const response = await axios.get("http://127.0.0.1:8000/api/patrimonios", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setDados(response.data);
+                const [patRes, ambRes] = await Promise.all([
+                    axios.get("http://127.0.0.1:8000/api/patrimonios/", {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    axios.get("http://127.0.0.1:8000/api/ambientes/", {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
+                setPatrimonios(patRes.data);
+                setAmbientes(ambRes.data);
             } catch (error) {
                 console.error("Erro ao buscar dados:", error.response?.data || error.message);
             }
         };
-        fetchData();
+        if (token) fetchData();
     }, [token, refresh]);
 
     useEffect(() => {
-        const fetchAmbientes = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                const response = await axios.get("http://127.0.0.1:8000/api/ambientes", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setAmbientes(response.data);
-            } catch (error) {
-                console.error("Erro ao buscar ambientes:", error.response?.data || error.message);
-            }
+        const filtrarPatrimonios = () => {
+            const dadosFiltrados = patrimonios.filter((p) => {
+                const niMatch = p.ni.toLowerCase().includes(filtroNi.toLowerCase());
+                const descricaoMatch = p.descricao.toLowerCase().includes(filtroDescricao.toLowerCase());
+                return niMatch && descricaoMatch;
+            });
+            setFiltrados(dadosFiltrados);
         };
-        fetchAmbientes();
-    }, []);
 
-    const apagar = async (id) => {
-        if (window.confirm("Deseja realmente apagar?")) {
-            try {
-                await axios.delete(`http://127.0.0.1:8000/api/patrimonio/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setRefresh(!refresh);
-            } catch (error) {
-                console.error("Erro ao apagar patrimônio:", error.response?.data || error.message);
-            }
-        }
-    };
+        filtrarPatrimonios();
+    }, [filtroNi, filtroDescricao, patrimonios]);
 
-    const criar = async (patrimonio) => {
-        const niExiste = dados.some((item) => item.ni === patrimonio.ni);
-        if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
-        }
-
-        const formData = new FormData();
-        formData.append("ni", patrimonio.ni);
-        formData.append("descricao", patrimonio.descricao);
-        formData.append("localizacao", patrimonio.localizacao?.id || patrimonio.localizacao);
-        if (patrimonio.media) {
-            formData.append("media", patrimonio.media);
-        }
-
+    const criar = async (dados) => {
         try {
-            await axios.post("http://127.0.0.1:8000/api/patrimonios", formData, {
+            const formData = new FormData();
+            formData.append("ni", String(dados.ni));
+            formData.append("descricao", dados.descricao);
+            formData.append("localizacao", String(dados.localizacao));
+    
+            await axios.post("http://127.0.0.1:8000/api/patrimonios/", formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data",
@@ -97,64 +81,15 @@ export default function Patrimonios() {
         }
     };
 
-    const handleImportarJson = async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const jsonData = JSON.parse(e.target.result);
-
-                for (const item of jsonData) {
-                    if (!item.ni || !item.descricao || !item.localizacao) {
-                        console.warn("Item ignorado (faltando campos):", item);
-                        continue;
-                    }
-
-                    const ambiente = ambientes.find(
-                        (a) => a.nome.trim().toLowerCase() === item.localizacao.trim().toLowerCase()
-                    );
-
-                    const formData = new FormData();
-                    formData.append("ni", String(item.ni));
-                    formData.append("descricao", item.descricao);
-                    formData.append("localizacao", ambiente.id);
-
-                    await axios.post("http://127.0.0.1:8000/api/patrimonios", formData, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "multipart/form-data",
-                        },
-                    });
-                }
-
-                alert("Importação concluída!");
-                setRefresh((r) => !r);
-            } catch (error) {
-                console.error("Erro ao importar JSON:", error.response?.data || error);
-                alert("Erro ao importar. Tente novamente ou verifique os dados.");
-            }
-        };
-        reader.readAsText(file);
-    };
-
-    const atualizar = async (patrimonio) => {
-        const niExiste = dados.some((item) => item.ni === patrimonio.ni);
-        if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
-        }
-
-        const formData = new FormData();
-        formData.append("ni", patrimonio.ni);
-        formData.append("descricao", patrimonio.descricao);
-        formData.append("localizacao", patrimonio.localizacao?.id || patrimonio.localizacao);
-        if (patrimonio.media instanceof File) {
-            formData.append("media", patrimonio.media);
-        }
-
+    const atualizar = async (dados) => {
         try {
-            await axios.post(`http://127.0.0.1:8000/api/patrimonio/${patrimonio.id}?_method=PUT`, formData, {
+            const formData = new FormData();
+            formData.append("ni", dados.ni);
+            formData.append("descricao", dados.descricao);
+            formData.append("localizacao", dados.localizacao);
+            if (dados.media) formData.append("media", dados.media);
+
+            await axios.put(`http://127.0.0.1:8000/api/patrimonio/${dados.id}/`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data",
@@ -166,118 +101,162 @@ export default function Patrimonios() {
         }
     };
 
-    const filtrarDados = () => {
-        return dados.filter((dado) =>
-            (filtroNi ? dado.ni?.includes(filtroNi) : true) &&
-            (filtroDescricao ? dado.descricao?.toLowerCase().includes(filtroDescricao.toLowerCase()) : true)
-        );
+    const apagar = async (id) => {
+        if (window.confirm("Deseja apagar este patrimônio?")) {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/patrimonio/${id}/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setRefresh(!refresh);
+            } catch (error) {
+                console.error("Erro ao apagar patrimônio:", error.response?.data || error.message);
+            }
+        }
     };
+
+    const handleImportarJson = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+    
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+    
+                for (const item of jsonData) {
+                    if (!item.ni || !item.descricao || item.localizacao == null) {
+                        console.warn("Item inválido ou incompleto:", item);
+                        continue;
+                    }
+
+                    const localizacaoId = Array.isArray(item.localizacao) ? item.localizacao[0] : item.localizacao;
+                    if (isNaN(localizacaoId)) {
+                        console.warn("localizacao inválido:", item.localizacao);
+                        continue;
+                    }
+    
+                    const ambiente = ambientes.find((a) => a.id === localizacaoId);
+                    if (!ambiente) {
+                        console.warn("Ambiente não encontrado para ID:", localizacaoId);
+                        continue;
+                    }
+    
+                    const formData = new FormData();
+                    formData.append("ni", item.ni);
+                    formData.append("descricao", item.descricao);
+                    formData.append("localizacao", String(ambiente.id)); 
+    
+                    await axios.post("http://127.0.0.1:8000/api/patrimonios/", formData, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "multipart/form-data",
+                        },
+                    });
+                }
+    
+                alert("Importação concluída com sucesso!");
+                setRefresh((r) => !r);
+            } catch (error) {
+                console.error("Erro ao importar JSON:", error.response?.data || error);
+                alert("Erro ao importar. Verifique o console.");
+            }
+        };
+        reader.readAsText(file);
+    };
+    
 
     return (
         <>
             <Header name={name} />
-            <div className="container mx-auto p-4 mt-30 text-center">
-                <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Patrimônios</h2>
+            <div className="container mx-auto p-6 mt-20 text-center text-white">
+                <h2 className="text-5xl font-bold mb-8 text-white drop-shadow">Lista de Patrimônios</h2>
 
-                <div className="flex items-center justify-center gap-3 text-4xl text-amber-50">
+                <div className="flex items-center mb-6 justify-center gap-6">
                     <FaPlus
-                        className="cursor-pointer mb-8 mt-5  hover:text-[#aaaaaa]"
+                        className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
                         onClick={() => {
-                            setFormVisivel(true);
+                            setIsModalOpen(true);
                             setPatrimonioSelecionado(null);
                         }}
                     />
+                    <label htmlFor="xlsxUpload">
+                        <LuFileJson className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm" />
+                    </label>
                     <input
+                        id="xlsxUpload"
                         type="file"
                         accept=".json"
-                        style={{ display: "none" }}
-                        id="import-json"
                         onChange={handleImportarJson}
-                    />
-
-                    <LuFileJson
-                        className="cursor-pointer mb-8 mt-5 hover:text-amber-200"
-                        onClick={() => document.getElementById("import-json").click()}
+                        className="hidden"
                     />
                 </div>
 
-                <ModalPatrimonios
-                    isOpen={formVisivel}
-                    onClose={() => setFormVisivel(false)}
-                    patrimonioSelecionado={patrimonioSelecionado}
-                    criar={criar}
-                    atualizar={atualizar}
-                    ambientes={ambientes}
-                />
-
-                <div className="flex flex-col items-center gap-2 mb-4">
+                <div className="flex flex-col md:flex-row justify-center gap-4 mb-6">
                     <input
                         type="text"
-                        placeholder="Buscar pelo NI..."
+                        placeholder="Buscar por NI..."
                         value={filtroNi}
                         onChange={(e) => setFiltroNi(e.target.value)}
-                        className="border rounded px-2 py-1 w-80 text-amber-50 "
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none"
                     />
                     <input
                         type="text"
                         placeholder="Buscar por descrição..."
                         value={filtroDescricao}
                         onChange={(e) => setFiltroDescricao(e.target.value)}
-                        className="border rounded px-2 py-1 w-80 text-amber-50"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none"
                     />
                 </div>
 
-                <table className="w-full mt-4 border-collapse border border-amber-50 text-amber-50">
-                    <thead>
-                    <tr className="bg-zinc-800">
-                            <th className="border p-3">Ações</th>
-                            <th className="border p-3">NI</th>
-                            <th className="border p-3">Descrição</th>
-                            <th className="border p-3">Localização</th>
-                            <th className="border p-3">Mídia</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtrarDados().map((dado) => (
-                            <tr key={dado.id} className="border text-base">
-                                <td className="border p-3">
-                                    <div className="flex gap-4 justify-center items-center text-3xl">
-                                        <FaTrash
-                                            className="cursor-pointer hover:text-[#aaaaaa] transition"
-                                            onClick={() => apagar(dado.id)}
-                                        />
+                <div className="overflow-x-auto border border-purple-400 rounded-xl">
+                    <table className="w-full text-white bg-gray-800">
+                        <thead>
+                            <tr className="bg-gray-800 text-purple-100 border-b border-purple-400 text-xl">
+                                <th className="p-4 border-r border-purple-400">Ações</th>
+                                <th className="p-4 border-r border-purple-400">NI</th>
+                                <th className="p-4 border-r border-purple-400">Descrição</th>
+                                <th className="p-4 border-r border-purple-400">Localização</th>
+                                <th className="p-4">Imagem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filtrados.map((p) => (
+                                <tr key={p.id} className="hover:bg-gray-900 transition-all duration-300">
+                                    <td className="p-3 flex justify-center gap-4 border-t border-purple-400 border-r">
+                                        <FaTrash className="text-white hover:text-purple-400 cursor-pointer text-xl" onClick={() => apagar(p.id)} />
                                         <MdCreate
-                                            className="cursor-pointer hover:text-[#aaaaaa] transition"
+                                            className="text-white hover:text-purple-400 cursor-pointer text-xl"
                                             onClick={() => {
-                                                setFormVisivel(true);
-                                                setPatrimonioSelecionado(dado);
+                                                setPatrimonioSelecionado(p);
+                                                setIsModalOpen(true);
                                             }}
                                         />
-                                    </div>
-                                </td>
-                                <td className="border p-3">{dado.ni}</td>
-                                <td className="border p-3">{dado.descricao}</td>
-                                <td className="border p-3">
-                                    {dado.localizacao_obj && dado.localizacao_obj.nome
-                                        ? dado.localizacao_obj.nome
-                                        : `ID: ${dado.localizacao || "-"}`}
-                                </td>
-                                <td className="border p-3">
-                                    {dado.media ? (
-                                        <img
-                                            src={`http://127.0.0.1:8000${dado.media}`}
-                                            alt="Mídia do patrimônio"
-                                            className="w-20 h-20 object-cover mx-auto rounded shadow"
-                                        />
-                                    ) : (
-                                        "Sem imagem"
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                    </td>
+                                    <td className="p-3 border-t border-purple-400 border-r">{p.ni}</td>
+                                    <td className="p-3 border-t border-purple-400 border-r">{p.descricao}</td>
+                                    <td className="p-3 border-t border-purple-400 border-r">{p.localizacao?.descricao || "N/A"}</td>
+                                    <td className="p-3 border-t border-purple-400">
+                                        {p.media ? (
+                                            <img src={`http://127.0.0.1:8000${p.media}`} alt="Imagem" className="w-12 h-12 object-cover mx-auto rounded" />
+                                        ) : (
+                                            "Sem imagem"
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <ModalPatrimonios
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                patrimonioSelecionado={patrimonioSelecionado}
+                criar={criar}
+                atualizar={atualizar}
+                ambientes={ambientes}
+            />
             <Footer />
         </>
     );

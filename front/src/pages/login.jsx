@@ -6,10 +6,7 @@ import { Bars } from "react-loading-icons";
 export default function Login() {
   const navigate = useNavigate();
 
-  // Animação para navigate
   const [fadeOut, setFadeOut] = useState(false);
-
-  // Estados de formulário
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [registerData, setRegisterData] = useState({
@@ -17,19 +14,15 @@ export default function Login() {
     password: "",
     confirmPassword: "",
   });
-
-  // Controle de erro e loading
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Componente de loading central
   const LoadingOverlay = () => (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-60 z-50 flex items-center justify-center">
       <Bars fill="#D8B4FE" height="90px" />
     </div>
   );
 
-  // FUNÇÃO DE LOGIN
   const logar = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -40,12 +33,12 @@ export default function Login() {
       });
 
       localStorage.setItem("token", response.data.access);
-      localStorage.setItem("user", user);
+      localStorage.setItem("user", JSON.stringify({ username: user }));
 
       setFadeOut(true);
       setTimeout(() => {
         navigate("/home");
-      }, 1200); // mesma duração da transição
+      }, 1200);
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       alert("Usuário ou senha incorretos!");
@@ -54,8 +47,6 @@ export default function Login() {
     }
   };
 
-
-  // FUNÇÃO DE REGISTRO
   const register = async (e) => {
     e.preventDefault();
     setError("");
@@ -85,7 +76,7 @@ export default function Login() {
       console.error("Erro ao cadastrar:", error);
       setError(
         error.response?.data?.detail ||
-        "Erro ao criar conta. Tente novamente."
+          "Erro ao criar conta. Tente novamente."
       );
     } finally {
       setIsLoading(false);
@@ -94,7 +85,7 @@ export default function Login() {
 
   return (
     <div
-      className={`min-h-screen bg-gray-900 text-amber-50 flex flex-col md:flex-row items-center justify-center p-6 gap-10 transition-opacity duration-700 ${fadeOut ? "opacity-0" : "opacity-100"
+      className={`min-h-screen bg-gray-900 text-white flex flex-col md:flex-row items-center justify-center p-6 gap-10 transition-opacity duration-700 ${fadeOut ? "opacity-0" : "opacity-100"
         }`}
     >
       {isLoading && <LoadingOverlay />}
@@ -110,7 +101,7 @@ export default function Login() {
             <label className="text-lg">Nome de usuário:</label>
             <input
               type="text"
-              className="w-full px-3 py-2 mt-1 rounded bg-amber-50 text-black focus:ring-2 focus:ring-purple-400 outline-none"
+              className="w-full px-3 py-2 mt-1 rounded bg-white text-black focus:ring-2 focus:ring-purple-400 outline-none"
               placeholder="Digite seu nome"
               value={user}
               onChange={(e) => setUser(e.target.value)}
@@ -122,7 +113,7 @@ export default function Login() {
             <label className="text-lg">Senha:</label>
             <input
               type="password"
-              className="w-full px-3 py-2 mt-1 rounded bg-amber-50 text-black focus:ring-2 focus:ring-purple-400 outline-none"
+              className="w-full px-3 py-2 mt-1 rounded bg-white text-black focus:ring-2 focus:ring-purple-400 outline-none"
               placeholder="Digite sua senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -133,7 +124,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-4 bg-purple-500 hover:bg-purple-700 text-amber-50 font-semibold py-2 rounded transition cursor-pointer text-xl"
+            className="mt-4 bg-purple-500 hover:bg-purple-700 text-white font-semibold py-2 rounded transition cursor-pointer text-xl"
           >
             Entrar
           </button>
@@ -157,7 +148,7 @@ export default function Login() {
             <label className="text-lg">Nome de usuário:</label>
             <input
               type="text"
-              className="w-full px-3 py-2 mt-1 rounded bg-amber-50 text-black focus:ring-2 focus:ring-purple-400 outline-none"
+              className="w-full px-3 py-2 mt-1 rounded bg-white text-black focus:ring-2 focus:ring-purple-400 outline-none"
               placeholder="Digite seu nome"
               value={registerData.username}
               onChange={(e) =>
@@ -171,7 +162,7 @@ export default function Login() {
             <label className="text-lg">Senha:</label>
             <input
               type="password"
-              className="w-full px-3 py-2 mt-1 rounded bg-amber-50 text-black focus:ring-2 focus:ring-purple-400 outline-none"
+              className="w-full px-3 py-2 mt-1 rounded bg-white text-black focus:ring-2 focus:ring-purple-400 outline-none"
               placeholder="Digite sua senha"
               value={registerData.password}
               onChange={(e) =>
@@ -185,7 +176,7 @@ export default function Login() {
             <label className="text-lg">Confirmar senha:</label>
             <input
               type="password"
-              className="w-full px-3 py-2 mt-1 rounded bg-amber-50 text-black focus:ring-2 focus:ring-purple-400 outline-none"
+              className="w-full px-3 py-2 mt-1 rounded bg-white text-black focus:ring-2 focus:ring-purple-400 outline-none"
               placeholder="Digite sua senha novamente"
               value={registerData.confirmPassword}
               onChange={(e) =>
@@ -201,7 +192,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-4 bg-purple-500 hover:bg-purple-700 text-amber-50 font-semibold py-2 rounded transition cursor-pointer text-xl"
+            className="mt-4 bg-purple-500 hover:bg-purple-700 text-white font-semibold py-2 rounded transition cursor-pointer text-xl"
           >
             Registrar
           </button>

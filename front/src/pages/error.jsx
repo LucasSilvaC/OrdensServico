@@ -6,7 +6,7 @@ export default function AccessDenied() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-amber-50 flex flex-col items-center justify-center p-6 text-center">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6 text-center">
       {/* Ícone animado */}
       <div className="mb-6 animate-spin-slow">
         <Settings size={100} strokeWidth={1.5} color="#a855f7" />

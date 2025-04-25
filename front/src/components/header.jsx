@@ -10,18 +10,17 @@ export default function Header({ name }) {
     { label: "Ambientes", path: "/ambientes" },
     { label: "Manutentores", path: "/manutentores" },
     { label: "Área", path: "/areas" },
-    { label: "Históricos", path: "/historicos" },
     { label: "Gestores", path: "/gestores" },
   ];
 
   return (
     <header className="w-full flex flex-col md:flex-row items-center justify-between px-6 py-4 bg-gray-900 shadow-lg shadow-purple-900/40 z-50">
-      <h1 className="text-4xl text-amber-50 font-extrabold tracking-wide uppercase drop-shadow-md">
+      <h1 className="text-4xl text-white font-extrabold tracking-wide uppercase drop-shadow-md">
         {name}
       </h1>
 
       <nav className="mt-4 md:mt-0">
-        <ul className="flex flex-wrap gap-6 text-amber-50 text-lg md:text-2xl font-medium transition-all">
+        <ul className="flex flex-wrap gap-6 text-white text-lg md:text-2xl font-medium transition-all">
           {navItems.map((item) => (
             <li
               key={item.path}

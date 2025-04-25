@@ -5,6 +5,8 @@ import Footer from "../components/footer";
 import ModalGestores from "../modal/gestores";
 import { FaTrash, FaPlus } from "react-icons/fa";
 import { MdCreate } from "react-icons/md";
+import { BsFiletypeXlsx } from "react-icons/bs";
+import * as XLSX from "xlsx";
 import axios from "axios";
 
 export default function Gestores() {
@@ -94,21 +96,76 @@ export default function Gestores() {
         );
     };
 
+    const handleImportarXlsx = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            for (const item of jsonData) {
+                if (!item.sn || !item.nome || !item.cargo) {
+                    console.warn("Linha incompleta no arquivo XLSX:", item);
+                    continue;
+                }
+
+                const payload = {
+                    sn: String(item.sn),
+                    nome: item.nome,
+                    cargo: item.cargo,
+                };
+
+                try {
+                    await axios.post("http://127.0.0.1:8000/api/gestores/", payload, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                } catch (error) {
+                    console.error("Erro ao criar gestor:", error.response?.data || error.message);
+                }
+            }
+
+            alert("Importação concluída com sucesso!");
+            setRefresh((r) => !r);
+        } catch (error) {
+            console.error("Erro ao processar arquivo XLSX:", error);
+            alert("Erro ao importar. Verifique o arquivo.");
+        }
+    };
+
     return (
         <>
             <Header name={name} />
-            <div className="container mx-auto p-6 mt-20 text-center text-amber-50">
-                <h2 className="text-5xl font-bold mb-8 text-amber-50 drop-shadow">
+            <div className="container mx-auto p-6 mt-20 text-center text-white">
+                <h2 className="text-5xl font-bold mb-8 text-white drop-shadow">
                     Lista de Gestores
                 </h2>
 
-                <div className="flex flex-col items-center mb-6">
+                <div className="flex items-center mb-6 justify-center gap-6">
                     <FaPlus
-                        className="text-amber-50 hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
+                        className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
                         onClick={() => {
                             setFormVisivel(true);
-                            setGestorSelecionado(null);
+                            setManutentorSelecionado(null);
                         }}
+                    />
+                    <label htmlFor="xlsxUpload">
+                        <BsFiletypeXlsx
+                            className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
+                        />
+                    </label>
+                    <input
+                        id="xlsxUpload"
+                        type="file"
+                        accept=".xlsx"
+                        onChange={handleImportarXlsx}
+                        className="hidden"
                     />
                 </div>
 
@@ -120,25 +177,23 @@ export default function Gestores() {
                     atualizar={atualizar}
                 />
 
-                {/* FILTROS */}
                 <div className="flex flex-col md:flex-row justify-center gap-4 mb-6">
                     <input
                         type="text"
                         placeholder="Buscar pelo SN..."
                         value={filtroSn}
                         onChange={(e) => setFiltroSn(e.target.value)}
-                        className="px-4 py-2 rounded bg-gray-800 text-amber-50 border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
                     />
                     <input
                         type="text"
                         placeholder="Buscar por nome..."
                         value={filtroNome}
                         onChange={(e) => setFiltroNome(e.target.value)}
-                        className="px-4 py-2 rounded bg-gray-800 text-amber-50 border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
                     />
                 </div>
 
-                {/* TABELA */}
                 <button
                     onClick={() => setTabelaVisivel(!tabelaVisivel)}
                     className="mb-6 px-6 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded shadow-md transition cursor-pointer text-xl"
@@ -148,7 +203,7 @@ export default function Gestores() {
 
                 {tabelaVisivel && (
                     <div className="overflow-x-auto transition-all duration-500 ease-in-out border border-purple-400 rounded-xl">
-                        <table className="w-full rounded-xl overflow-hidden text-amber-100 bg-gray-800 cursor-pointer">
+                        <table className="w-full rounded-xl overflow-hidden text-white bg-gray-800 cursor-pointer">
                             <thead>
                                 <tr className="bg-gray-800 text-purple-100 border-b border-purple-400 text-xl">
                                     <th className="p-4 border-r border-purple-400">Ações</th>
@@ -165,11 +220,11 @@ export default function Gestores() {
                                     >
                                         <td className="p-3 flex justify-center gap-4 border-t border-purple-400 border-r">
                                             <FaTrash
-                                                className="text-amber-50 hover:text-purple-400 cursor-pointer text-xl"
+                                                className="text-white hover:text-purple-400 cursor-pointer text-xl"
                                                 onClick={() => apagar(dado.id)}
                                             />
                                             <MdCreate
-                                                className="text-amber-50 hover:text-purple-400 cursor-pointer text-xl"
+                                                className="text-white hover:text-purple-400 cursor-pointer text-xl"
                                                 onClick={() => {
                                                     setFormVisivel(true);
                                                     setGestorSelecionado(dado);

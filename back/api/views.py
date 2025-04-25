@@ -1,5 +1,5 @@
-from .models import OrdemServico, Gestor, Manutentor, Patrimonio, Ambiente, Historico, UserComum, Area
-from .serializers import OrdemServicoSerializer, GestoresSerializer, ManutentoresSerializer, AreaSerializer,PatrimonioSerializer, AmbienteSerializer, HistoricosSerializer
+from .models import OrdemServico, Gestor, Manutentor, Patrimonio, Ambiente, UserComum, Area
+from .serializers import OrdemServicoSerializer, GestoresSerializer, ManutentoresSerializer, AreaSerializer,PatrimonioSerializer, AmbienteSerializer
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -137,31 +137,6 @@ class AmbientesView(ListCreateAPIView):
 class AmbientesDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Ambiente.objects.all()
     serializer_class = AmbienteSerializer
-    permission_classes = [IsAuthenticated]
-
-#  HISTÓRICO 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def listar_historicos(request):
-    if request.method == 'GET':
-        queryset = Historico.objects.all()
-        serializer = HistoricosSerializer(queryset, many=True)
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        serializer = HistoricosSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-class HistoricosView(ListCreateAPIView):
-    queryset = Historico.objects.all()
-    serializer_class = HistoricosSerializer
-    permission_classes = [IsAuthenticated]
-
-class HistoricosDetailView(RetrieveUpdateDestroyAPIView):
-    queryset = Historico.objects.all()
-    serializer_class = HistoricosSerializer
     permission_classes = [IsAuthenticated]
 
 #  CADASTRO DE USUÁRIO 

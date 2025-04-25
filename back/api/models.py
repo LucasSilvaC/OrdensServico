@@ -55,21 +55,16 @@ class OrdemServico(models.Model):
     ]
 
     descricao = models.CharField(max_length=255)
-    abertura = models.DateTimeField(auto_now_add=True)
+    abertura = models.DateTimeField()
     fechamento = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=3, choices=STATUS)
     patrimonio = models.ForeignKey('Patrimonio', on_delete=models.SET_NULL, null=True, blank=True)
     ambiente = models.ForeignKey('Ambiente', on_delete=models.CASCADE)
-    manutentor = models.ForeignKey('Manutentor', on_delete=models.CASCADE)
+    manutentor = models.ForeignKey('Manutentor', on_delete=models.CASCADE, null=True)
     responsavel = models.CharField(max_length=255, null=True, blank=True)
     prioridade = models.CharField(max_length=1, choices=PRIORIDADE)
     funcionario = models.ForeignKey('UserComum', on_delete=models.SET_NULL, null=True) 
     sn = models.CharField(max_length=255)  
-
-# Histórico
-class Historico(models.Model):
-    ordem_servico = models.ForeignKey('OrdemServico', on_delete=models.CASCADE)
-    atividade_realizada = models.TextField()
 
 # Usuários
 class UserManager(BaseUserManager):

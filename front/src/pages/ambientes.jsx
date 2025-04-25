@@ -2,64 +2,47 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import ModalAmbientes from "../modal/ambientes"; 
+import ModalAmbientes from "../modal/ambientes";
 import { FaTrash, FaPlus } from "react-icons/fa";
 import { MdCreate } from "react-icons/md";
+import { BsFiletypeXlsx } from "react-icons/bs";
 import axios from "axios";
+import * as XLSX from "xlsx";
 
 export default function Ambientes() {
     const name = "Ambientes";
-    const [dados, setDados] = useState([]);
-    const [filtroNi, setFiltroNi] = useState("");
-    const [filtroNome, setFiltroNome] = useState("");
-    const [formVisivel, setFormVisivel] = useState(false);
-    const [ambienteSelecionado, setAmbienteSelecionado] = useState(null);
+    const [ambientes, setAmbientes] = useState([]);
     const [refresh, setRefresh] = useState(false);
-    const navigate = useNavigate();
+    const [filtroSig, setFiltroSig] = useState("");
+    const [filtroDescricao, setFiltroDescricao] = useState("");
+    const [ambienteSelecionado, setAmbienteSelecionado] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (!token) {
-            alert("Faça login para acessar essa página");
-            navigate("/login");
-        }
-    }, [token, navigate]);
+        if (!user) navigate("/error");
+    }, [user]);
 
     useEffect(() => {
-        if (!token) return;
-        const fetchData = async () => {
+        const fetchAmbientes = async () => {
             try {
-                const response = await axios.get("http://127.0.0.1:8000/api/ambientes", {
+                const res = await axios.get("http://127.0.0.1:8000/api/ambientes/", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                setDados(response.data);
+                setAmbientes(res.data);
             } catch (error) {
                 console.error("Erro ao buscar ambientes:", error.response?.data || error.message);
             }
         };
-        fetchData();
+        if (token) fetchAmbientes();
     }, [token, refresh]);
 
-    const apagar = async (id) => {
-        if (window.confirm("Deseja realmente apagar este ambiente?")) {
-            try {
-                await axios.delete(`http://127.0.0.1:8000/api/ambiente/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setRefresh(!refresh);
-            } catch (error) {
-                console.error("Erro ao apagar ambiente:", error.response?.data || error.message);
-            }
-        }
-    };
-
-    const criar = async (ambiente) => {
-        const niExiste = dados.some((item) => item.ni === ambiente.ni);
-        if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
-        }
+    const criar = async (gestor) => {
         try {
-            await axios.post("http://127.0.0.1:8000/api/ambientes", ambiente, {
+            await axios.post("http://127.0.0.1:8000/api/ambientes/", gestor, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -72,12 +55,8 @@ export default function Ambientes() {
     };
 
     const atualizar = async (ambiente) => {
-        const niExiste = dados.some((item) => item.ni === ambiente.ni);
-        if (niExiste) {
-            alert("Já existe um patrimônio com esse NI.");
-        }
         try {
-            await axios.put(`http://127.0.0.1:8000/api/ambiente/${ambiente.id}`, ambiente, {
+            await axios.put(`http://127.0.0.1:8000/api/ambiente/${ambiente.id}/`, ambiente, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -89,82 +68,176 @@ export default function Ambientes() {
         }
     };
 
-    const filtrarDados = () => {
-        return dados.filter((dado) =>
-            (filtroNi ? dado.ni?.includes(filtroNi) : true) &&
-            (filtroNome ? dado.nome?.toLowerCase().includes(filtroNome.toLowerCase()) : true)
-        );
+    const apagar = async (id) => {
+        if (window.confirm("Deseja apagar este ambiente?")) {
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/ambiente/${id}/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setRefresh(!refresh);
+            } catch (error) {
+                console.error("Erro ao apagar ambiente:", error.response?.data || error.message);
+            }
+        }
     };
+
+    const salvar = async (ambiente) => {
+        const payload = {
+            sig: ambiente.sig,
+            descricao: ambiente.descricao,
+            ni: ambiente.ni,
+            responsavel: ambiente.responsavel,
+        };
+        try {
+            if (ambiente.id) {
+                await axios.put(`http://127.0.0.1:8000/api/ambiente/${ambiente.id}/`, payload, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+            } else {
+                await axios.post(`http://127.0.0.1:8000/api/ambientes/`, payload, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+            }
+            setIsModalOpen(false);
+            setAmbienteSelecionado(null);
+            setRefresh(!refresh);
+        } catch (error) {
+            console.error("Erro ao salvar ambiente:", error.response?.data || error.message);
+        }
+    };
+
+    const handleImportarXlsx = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: "array" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            for (const item of jsonData) {
+                const payload = {
+                    sig: item.sig,
+                    descricao: item.descricao,
+                    ni: item.ni,
+                    responsavel: item.responsavel,
+                };
+                try {
+                    await axios.post("http://127.0.0.1:8000/api/ambientes/", payload, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                } catch (error) {
+                    console.error("Erro ao importar ambiente:", error.response?.data || error.message);
+                }
+            }
+
+            setRefresh(!refresh);
+            alert("Importação finalizada!");
+        } catch (err) {
+            console.error("Erro ao processar arquivo:", err);
+            alert("Erro ao importar arquivo.");
+        }
+    };
+
+    const filtrados = ambientes.filter((a) =>
+        (filtroSig ? String(a.sig).includes(filtroSig) : true) &&
+        (filtroDescricao ? a.descricao?.toLowerCase().includes(filtroDescricao.toLowerCase()) : true)
+    );
 
     return (
         <>
             <Header name={name} />
-            <div className="container mx-auto p-4 mt-30 text-center">
-                <h2 className="text-5xl font-bold mb-4 text-amber-50">Lista de Ambientes</h2>
+            <div className="container mx-auto p-6 mt-20 text-center text-white">
+                <h2 className="text-5xl font-bold mb-8 text-white drop-shadow">Lista de Ambientes</h2>
 
-                <div className="flex flex-col items-center">
+                <div className="flex items-center mb-6 justify-center gap-6">
                     <FaPlus
-                        className="text-amber-50 cursor-pointer text-3xl mb-3"
+                        className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
                         onClick={() => {
-                            setFormVisivel(true);
+                            setIsModalOpen(true);
                             setAmbienteSelecionado(null);
                         }}
                     />
-                </div>
-
-                <ModalAmbientes
-                    isOpen={formVisivel}
-                    onClose={() => setFormVisivel(false)}
-                    ambienteSelecionado={ambienteSelecionado}
-                    criar={criar}
-                    atualizar={atualizar}
-                />
-
-                <div className="flex flex-col items-center gap-2 mb-4">
+                    <label htmlFor="xlsxUpload">
+                        <BsFiletypeXlsx className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm" />
+                    </label>
                     <input
-                        type="text"
-                        placeholder="Buscar pelo NI..."
-                        value={filtroNi}
-                        onChange={(e) => setFiltroNi(e.target.value)}
-                        className="border rounded px-2 py-1 w-80 text-amber-50"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nome..."
-                        value={filtroNome}
-                        onChange={(e) => setFiltroNome(e.target.value)}
-                        className="border rounded px-2 py-1 w-80 text-amber-50"
+                        id="xlsxUpload"
+                        type="file"
+                        accept=".xlsx"
+                        onChange={handleImportarXlsx}
+                        className="hidden"
                     />
                 </div>
 
-                <table className="w-full mt-4 border-collapse text-amber-50">
-                    <thead>
-                        <tr className="bg-transparent">
-                            <th className="border p-2">Ações</th>
-                            <th className="border p-2">NI</th>
-                            <th className="border p-2">Nome</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtrarDados().map((dado) => (
-                            <tr key={dado.id} className="border">
-                                <td className="border p-1 flex gap-2 justify-center">
-                                    <FaTrash className="cursor-pointer text-3xl hover:text-[#aaaaaa]" onClick={() => apagar(dado.id)} />
-                                    <MdCreate
-                                        className="cursor-pointer text-3xl hover:text-[#aaaaaa]"
-                                        onClick={() => {
-                                            setFormVisivel(true);
-                                            setAmbienteSelecionado(dado);
-                                        }}
-                                    />
-                                </td>
-                                <td className="border p-2">{dado.ni}</td>
-                                <td className="border p-2">{dado.nome}</td>
+                <div className="flex flex-col md:flex-row justify-center gap-4 mb-6">
+                    <input
+                        type="text"
+                        placeholder="Buscar por Sigla..."
+                        value={filtroSig}
+                        onChange={(e) => setFiltroSig(e.target.value)}
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Buscar por descrição..."
+                        value={filtroDescricao}
+                        onChange={(e) => setFiltroDescricao(e.target.value)}
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none"
+                    />
+                </div>
+
+                <div className="overflow-x-auto border border-purple-400 rounded-xl">
+                    <table className="w-full text-white bg-gray-800">
+                        <thead>
+                            <tr className="bg-gray-800 text-purple-100 border-b border-purple-400 text-xl">
+                                <th className="p-4 border-r border-purple-400">Ações</th>
+                                <th className="p-4 border-r border-purple-400">Sigla</th>
+                                <th className="p-4 border-r border-purple-400">Descrição</th>
+                                <th className="p-4 border-r border-purple-400">NI</th>
+                                <th className="p-4">Responsável</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filtrados.map((amb) => (
+                                <tr key={amb.id} className="hover:bg-gray-900 transition-all duration-300">
+                                    <td className="p-3 flex justify-center gap-4 border-t border-purple-400 border-r">
+                                        <FaTrash className="text-white hover:text-purple-400 cursor-pointer text-xl" onClick={() => apagar(amb.id)} />
+                                        <MdCreate
+                                            className="text-white hover:text-purple-400 cursor-pointer text-xl"
+                                            onClick={() => {
+                                                setAmbienteSelecionado(amb);
+                                                setIsModalOpen(true);
+                                            }}
+                                        />
+                                    </td>
+                                    <td className="p-3 border-t border-purple-400 border-r">{amb.sig}</td>
+                                    <td className="p-3 border-t border-purple-400 border-r">{amb.descricao}</td>
+                                    <td className="p-3 border-t border-purple-400 border-r">{amb.ni}</td>
+                                    <td className="p-3 border-t border-purple-400">{amb.responsavel}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <ModalAmbientes
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                ambienteSelecionado={ambienteSelecionado}
+                criar={criar}
+                atualizar={atualizar}
+            />
             <Footer />
         </>
     );

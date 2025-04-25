@@ -3,11 +3,11 @@ import { Facebook, Instagram, Linkedin } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-amber-50 py-10 px-4 mt-32 shadow-inner shadow-purple-800/20">
+    <footer className="bg-gray-900 text-white py-10 px-4 mt-32 shadow-inner shadow-purple-800/20">
       <div className="flex flex-col items-center max-w-6xl mx-auto gap-10">
         {/* INSTITUIÇÃO */}
         <section className="text-center max-w-xl">
-          <h3 className="text-2xl font-bold text-amber-50 mb-2 drop-shadow">
+          <h3 className="text-2xl font-bold text-white mb-2 drop-shadow">
             Escola SENAI Roberto Mange
           </h3>
           <p className="text-lg text-gray-300 mb-4 italic">
@@ -31,7 +31,7 @@ export default function Footer() {
 
         {/* REDES SOCIAIS */}
         <section className="text-center">
-          <h4 className="text-xl font-semibold text-amber-50 mb-3 drop-shadow">
+          <h4 className="text-xl font-semibold text-white mb-3 drop-shadow">
             Redes Sociais
           </h4>
           <nav className="flex justify-center gap-5">

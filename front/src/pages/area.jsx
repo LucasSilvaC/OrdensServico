@@ -6,6 +6,8 @@ import ModalArea from "../modal/areas";
 import { FaTrash, FaPlus } from "react-icons/fa";
 import { MdCreate } from "react-icons/md";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import { BsFiletypeXlsx } from "react-icons/bs";
 
 export default function Area() {
     const name = "Área";
@@ -55,10 +57,19 @@ export default function Area() {
 
     const criar = async (dados) => {
         try {
-            const response = await axios.post("http://127.0.0.1:8000/api/areas/", {
-                nome: dados.nome,
-            });
-            console.log("Área criada com sucesso!", response.data);
+            const response = await axios.post(
+                "http://127.0.0.1:8000/api/areas/",
+                {
+                    nome: dados.nome,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            setRefresh((prev) => !prev);
         } catch (error) {
             console.error("Erro ao criar área: ", error.response?.data || error.message);
         }
@@ -84,19 +95,68 @@ export default function Area() {
         );
     };
 
+    const handleImportarXlsx = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            for (const item of jsonData) {
+                if (!item.nome) {
+                    console.warn("Nome de área não encontrado em uma linha:", item);
+                    continue;
+                }
+
+                try {
+                    await axios.post("http://127.0.0.1:8000/api/areas/", { nome: item.nome }, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                } catch (error) {
+                    console.error("Erro ao criar área:", error.response?.data || error.message);
+                }
+            }
+
+            alert("Importação concluída com sucesso!");
+            setRefresh((r) => !r);
+        } catch (error) {
+            console.error("Erro ao processar arquivo XLSX:", error);
+            alert("Erro ao importar. Verifique o arquivo.");
+        }
+    };
+
     return (
         <>
             <Header name={name} />
-            <div className="container mx-auto p-6 mt-20 text-center text-amber-50">
-                <h2 className="text-5xl font-bold mb-8 text-amber-50 drop-shadow">Lista de Áreas</h2>
+            <div className="container mx-auto p-6 mt-20 text-center text-white">
+                <h2 className="text-5xl font-bold mb-8 text-white drop-shadow">Lista de Áreas</h2>
 
-                <div className="flex flex-col items-center mb-6">
+                <div className="flex items-center mb-6 justify-center gap-6">
                     <FaPlus
-                        className="text-amber-50 hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
+                        className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
                         onClick={() => {
                             setFormVisivel(true);
-                            setAreaSelecionada(null);
+                            setManutentorSelecionado(null);
                         }}
+                    />
+                    <label htmlFor="xlsxUpload">
+                        <BsFiletypeXlsx
+                            className="text-white hover:text-purple-400 text-4xl cursor-pointer transition drop-shadow-sm"
+                        />
+                    </label>
+                    <input
+                        id="xlsxUpload"
+                        type="file"
+                        accept=".xlsx"
+                        onChange={handleImportarXlsx}
+                        className="hidden"
                     />
                 </div>
 
@@ -114,7 +174,7 @@ export default function Area() {
                         placeholder="Buscar por nome..."
                         value={filtroNome}
                         onChange={(e) => setFiltroNome(e.target.value)}
-                        className="px-4 py-2 rounded bg-gray-800 text-amber-50 border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="px-4 py-2 rounded bg-gray-800 text-white border border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400"
                     />
                 </div>
 
@@ -127,7 +187,7 @@ export default function Area() {
 
                 {tabelaVisivel && (
                     <div className="overflow-x-auto border border-purple-400 rounded-xl">
-                        <table className="w-full rounded-xl text-amber-100 bg-gray-800">
+                        <table className="w-full rounded-xl text-white bg-gray-800">
                             <thead>
                                 <tr className="bg-gray-800 text-purple-100 border-b border-purple-400 text-xl">
                                     <th className="p-4 border-r border-purple-400">Ações</th>
@@ -142,11 +202,11 @@ export default function Area() {
                                     >
                                         <td className="p-3 flex justify-center gap-4 border-t border-purple-400 border-r">
                                             <FaTrash
-                                                className="text-amber-50 hover:text-purple-400 cursor-pointer text-xl"
+                                                className="text-white hover:text-purple-400 cursor-pointer text-xl"
                                                 onClick={() => apagar(dado.id)}
                                             />
                                             <MdCreate
-                                                className="text-amber-50 hover:text-purple-400 cursor-pointer text-xl"
+                                                className="text-white hover:text-purple-400 cursor-pointer text-xl"
                                                 onClick={() => {
                                                     setFormVisivel(true);
                                                     setAreaSelecionada(dado);
